@@ -1,0 +1,115 @@
+============================= test session starts =============================
+platform win32 -- Python 3.12.10, pytest-9.0.2, pluggy-1.6.0
+rootdir: D:\projects\datamodeMLOPS\mlops-auto-retrain
+plugins: anyio-4.10.0, hydra-core-1.3.2, langsmith-0.4.14
+collected 8 items
+
+tests\test_api.py Loading model from: D:\projects\datamodeMLOPS\mlops-auto-retrain\production_models\v1.0\lasso_pipeline.pkl
+[OK] Production model loaded successfully
+..F..FFF
+
+================================== FAILURES ===================================
+____________________________ test_predict_success _____________________________
+
+client = <starlette.testclient.TestClient object at 0x000001CD5AC9E2A0>
+valid_payload = {'Curb_weight': 2.639, 'Engine_size': 1.8, 'Fuel_capacity': 13.2, 'Fuel_efficiency': 28.0, ...}
+
+    def test_predict_success(client, valid_payload):
+        """Test a successful prediction with valid data"""
+        response = client.post("/predict", json=valid_payload)
+>       assert response.status_code == 200
+E       assert 400 == 200
+E        +  where 400 = <Response [400 Bad Request]>.status_code
+
+tests\test_api.py:63: AssertionError
+------------------------------ Captured log call ------------------------------
+ERROR    data_validation.validator:validator.py:313 Error loading data: argument of type 'method' is not iterable
+_____________________ test_predict_missing_optional_field _____________________
+
+client = <starlette.testclient.TestClient object at 0x000001CD5AC9E2A0>
+valid_payload = {'Curb_weight': 2.639, 'Engine_size': 1.8, 'Fuel_capacity': 13.2, 'Fuel_efficiency': 28.0, ...}
+
+    def test_predict_missing_optional_field(client, valid_payload):
+        """Test prediction with missing optional field (__year_resale_value)"""
+        payload = valid_payload.copy()
+        del payload["__year_resale_value"]
+    
+        response = client.post("/predict", json=payload)
+>       assert response.status_code == 200
+E       assert 400 == 200
+E        +  where 400 = <Response [400 Bad Request]>.status_code
+
+tests\test_api.py:94: AssertionError
+------------------------------ Captured log call ------------------------------
+ERROR    data_validation.validator:validator.py:313 Error loading data: argument of type 'method' is not iterable
+_____________________ test_predict_edge_case_zero_values ______________________
+
+client = <starlette.testclient.TestClient object at 0x000001CD5AC9E2A0>
+valid_payload = {'Curb_weight': 2.639, 'Engine_size': 1.8, 'Fuel_capacity': 13.2, 'Fuel_efficiency': 28.0, ...}
+
+    def test_predict_edge_case_zero_values(client, valid_payload):
+        """Test edge case with zero values where allowed"""
+        payload = valid_payload.copy()
+        # Price 0 might be allowed by schema but maybe not by business logic?
+        # Let's see what our validator says.
+        payload["Price_in_thousands"] = 0.1
+    
+        response = client.post("/predict", json=payload)
+>       assert response.status_code == 200
+E       assert 400 == 200
+E        +  where 400 = <Response [400 Bad Request]>.status_code
+
+tests\test_api.py:105: AssertionError
+------------------------------ Captured log call ------------------------------
+ERROR    data_validation.validator:validator.py:313 Error loading data: argument of type 'method' is not iterable
+____________________________ test_batch_prediction ____________________________
+
+client = <starlette.testclient.TestClient object at 0x000001CD5AC9E2A0>
+valid_payload = {'Curb_weight': 2.639, 'Engine_size': 1.8, 'Fuel_capacity': 13.2, 'Fuel_efficiency': 28.0, ...}
+
+    def test_batch_prediction(client, valid_payload):
+        """Test batch prediction endpoint"""
+        payload = [valid_payload, valid_payload]
+        response = client.post("/predict_batch", json=payload)
+        assert response.status_code == 200
+        assert len(response.json()) == 2
+>       assert response.json()[0]["status"] == "success"
+E       AssertionError: assert 'error' == 'success'
+E         
+E         - success
+E         + error
+
+tests\test_api.py:113: AssertionError
+------------------------------ Captured log call ------------------------------
+ERROR    data_validation.validator:validator.py:313 Error loading data: argument of type 'method' is not iterable
+ERROR    data_validation.validator:validator.py:313 Error loading data: argument of type 'method' is not iterable
+============================== warnings summary ===============================
+api\main.py:32
+  D:\projects\datamodeMLOPS\mlops-auto-retrain\api\main.py:32: DeprecationWarning: 
+          on_event is deprecated, use lifespan event handlers instead.
+  
+          Read more about it in the
+          [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+          
+    @app.on_event("startup")
+
+C:\Users\SG LOVE\AppData\Local\Programs\Python\Python312\Lib\site-packages\fastapi\applications.py:4576
+  C:\Users\SG LOVE\AppData\Local\Programs\Python\Python312\Lib\site-packages\fastapi\applications.py:4576: DeprecationWarning: 
+          on_event is deprecated, use lifespan event handlers instead.
+  
+          Read more about it in the
+          [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+          
+    return self.router.on_event(event_type)
+
+C:\Users\SG LOVE\AppData\Local\Programs\Python\Python312\Lib\site-packages\pydantic\fields.py:1093: 15 warnings
+  C:\Users\SG LOVE\AppData\Local\Programs\Python\Python312\Lib\site-packages\pydantic\fields.py:1093: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.11/migration/
+    warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/test_api.py::test_predict_success - assert 400 == 200
+FAILED tests/test_api.py::test_predict_missing_optional_field - assert 400 ==...
+FAILED tests/test_api.py::test_predict_edge_case_zero_values - assert 400 == 200
+FAILED tests/test_api.py::test_batch_prediction - AssertionError: assert 'err...
+================== 4 failed, 4 passed, 17 warnings in 3.95s ===================

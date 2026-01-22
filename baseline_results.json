@@ -1,0 +1,69 @@
+{
+  "mean_predictor": {
+    "params": {
+      "model_type": "MeanPredictor",
+      "mean_value": 52.051120000000004,
+      "n_train_samples": 125
+    },
+    "train_metrics": {
+      "mse": 3277.7664778656,
+      "rmse": 57.251781438358755,
+      "mae": 41.14430336,
+      "r2": 0.0,
+      "mape": 698.5200715887573
+    },
+    "test_metrics": {
+      "mse": 9762.1352645694,
+      "rmse": 98.8035184827413,
+      "mae": 53.00556,
+      "r2": -0.002216031197104229,
+      "mape": 647.1505360230789
+    }
+  },
+  "median_predictor": {
+    "params": {
+      "model_type": "MedianPredictor",
+      "median_value": 30.696,
+      "n_train_samples": 125
+    },
+    "train_metrics": {
+      "mse": 3733.8076280799996,
+      "rmse": 61.10489037777582,
+      "mae": 37.22302400000001,
+      "r2": -0.1391316780173315,
+      "mape": 405.59997510310177
+    },
+    "test_metrics": {
+      "mse": 10416.608403375,
+      "rmse": 102.06178718489599,
+      "mae": 46.410250000000005,
+      "r2": -0.06940660517731323,
+      "mape": 369.70035425747744
+    }
+  },
+  "comparison": {
+    "better_baseline": "Mean",
+    "comparison_table": {
+      "mse": {
+        "Mean Predictor": 9762.1352645694,
+        "Median Predictor": 10416.608403375
+      },
+      "rmse": {
+        "Mean Predictor": 98.8035184827413,
+        "Median Predictor": 102.06178718489599
+      },
+      "mae": {
+        "Mean Predictor": 53.00556,
+        "Median Predictor": 46.410250000000005
+      },
+      "r2": {
+        "Mean Predictor": -0.002216031197104229,
+        "Median Predictor": -0.06940660517731323
+      },
+      "mape": {
+        "Mean Predictor": 647.1505360230789,
+        "Median Predictor": 369.70035425747744
+      }
+    }
+  }
+}

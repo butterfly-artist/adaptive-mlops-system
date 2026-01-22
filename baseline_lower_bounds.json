@@ -1,0 +1,12 @@
+{
+  "baseline_lower_bounds": {
+    "min_rmse_to_beat": 98.8035184827413,
+    "min_mae_to_beat": 46.410250000000005,
+    "min_r2_to_beat": -0.002216031197104229
+  },
+  "reference_predictions": {
+    "mean_prediction": 52.051120000000004,
+    "median_prediction": 30.696
+  },
+  "best_baseline_model": "Mean"
+}

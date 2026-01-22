@@ -1,0 +1,22 @@
+artifact_path: file:///D:\projects\datamodeMLOPS\mlops-auto-retrain\mlruns/236769769552933228/models/m-1949aff7644241779245391ce499a887/artifacts
+flavors:
+  python_function:
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.sklearn
+    model_path: model.pkl
+    predict_fn: predict
+    python_version: 3.12.10
+  sklearn:
+    code: null
+    pickled_model: model.pkl
+    serialization_format: cloudpickle
+    sklearn_version: 1.8.0
+mlflow_version: 3.8.1
+model_id: m-1949aff7644241779245391ce499a887
+model_size_bytes: 6776
+model_uuid: m-1949aff7644241779245391ce499a887
+prompts: null
+run_id: 112a8fe1f1a04ff89f9494ef53fe8b4d
+utc_time_created: '2026-01-22 10:15:58.944276'

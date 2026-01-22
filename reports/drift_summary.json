@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-01-22T16:08:58.434254",
+  "total_features_checked": 16,
+  "drifted_features_count": 14,
+  "drifted_features": [
+    "Manufacturer",
+    "Model",
+    "__year_resale_value",
+    "Price_in_thousands",
+    "Engine_size",
+    "Horsepower",
+    "Wheelbase",
+    "Width",
+    "Length",
+    "Curb_weight",
+    "Fuel_capacity",
+    "Fuel_efficiency",
+    "Latest_Launch",
+    "Power_perf_factor"
+  ],
+  "prediction_drift_detected": true,
+  "overall_drift_status": true
+}

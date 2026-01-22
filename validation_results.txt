@@ -1,0 +1,52 @@
+python : 
+INFO:__main__:Loaded data: 
+157 rows, 16 columns
+At line:1 char:1
++ python src/data_validation
+/validator.py 2>&1 | 
+Out-File -FilePath val ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          
+    : NotSpecified: (INFO:  
+  __main__:L...ows, 16 co   
+ lumns:String) [], Remot    
+eException
+    + FullyQualifiedErrorId 
+    : NativeCommandError
+ 
+INFO:__main__:Starting data 
+validation...
+INFO:__main__:\u2705 Data 
+validation passed!
+WARNING:__main__:\u26a0\ufe0
+f  4 warnings raised
+
+============================================================
+VALIDATION RESULTS
+============================================================
+Traceback (most recent call 
+last):
+  File "D:\projects\datamode
+MLOPS\mlops-auto-retrain\src
+\data_validation\validator.p
+y", line 313, in <module>
+    print(f"Status: 
+{'\u2705 PASSED' if 
+is_valid else '\u274c 
+FAILED'}")
+  File "C:\Users\SG LOVE\App
+Data\Local\Programs\Python\P
+ython312\Lib\encodings\cp125
+2.py", line 19, in encode
+    return codecs.charmap_en
+code(input,self.errors,encod
+ing_table)[0]
+           ^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^
+UnicodeEncodeError: 
+'charmap' codec can't 
+encode character '\u2705' 
+in position 8: character 
+maps to <undefined>

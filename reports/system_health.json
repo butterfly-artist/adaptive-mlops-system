@@ -1,0 +1,28 @@
+{
+  "timestamp": "2026-01-22T16:08:53.126924",
+  "system_status": "Drift Detected",
+  "model_performance": {
+    "current_rmse": 50.48229862817371,
+    "current_r2": 0.32274487772403604,
+    "last_updated": "2026-01-22T16:02:21.623412"
+  },
+  "drift_observability": {
+    "last_drift_check": "2026-01-22T16:08:53.123925",
+    "drifted_features_count": 1,
+    "drifted_features": [
+      "Manufacturer"
+    ],
+    "prediction_drift_detected": false
+  },
+  "retraining_observability": {
+    "total_retraining_attempts": 1,
+    "successful_retrains": 0,
+    "failed_retrains": 0,
+    "rejected_by_gate": 0,
+    "last_trigger_reason": "Retraining skipped: Prediction drift not significant, Insufficient new samples"
+  },
+  "stability_metrics": {
+    "retrain_success_rate": 0.0,
+    "model_promotion_rate": 1.0
+  }
+}

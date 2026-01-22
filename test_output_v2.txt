@@ -1,0 +1,76 @@
+============================= test session starts =============================
+platform win32 -- Python 3.12.10, pytest-9.0.2, pluggy-1.6.0
+rootdir: D:\projects\datamodeMLOPS\mlops-auto-retrain
+plugins: anyio-4.10.0, hydra-core-1.3.2, langsmith-0.4.14
+collected 8 items
+
+tests\test_api.py .FF.FFFF                                               [100%]
+
+================================== FAILURES ===================================
+______________________________ test_health_check ______________________________
+tests\test_api.py:55: in test_health_check
+    assert response.json()["status"] == "healthy"
+E   AssertionError: assert 'unhealthy' == 'healthy'
+E     
+E     - healthy
+E     + unhealthy
+E     ? ++
+____________________________ test_predict_success _____________________________
+tests\test_api.py:60: in test_predict_success
+    assert response.status_code == 200
+E   assert 503 == 200
+E    +  where 503 = <Response [503 Service Unavailable]>.status_code
+________________________ test_predict_validation_error ________________________
+tests\test_api.py:82: in test_predict_validation_error
+    assert response.status_code == 400
+E   assert 503 == 400
+E    +  where 503 = <Response [503 Service Unavailable]>.status_code
+_____________________ test_predict_missing_optional_field _____________________
+tests\test_api.py:91: in test_predict_missing_optional_field
+    assert response.status_code == 200
+E   assert 503 == 200
+E    +  where 503 = <Response [503 Service Unavailable]>.status_code
+_____________________ test_predict_edge_case_zero_values ______________________
+tests\test_api.py:102: in test_predict_edge_case_zero_values
+    assert response.status_code == 200
+E   assert 503 == 200
+E    +  where 503 = <Response [503 Service Unavailable]>.status_code
+____________________________ test_batch_prediction ____________________________
+tests\test_api.py:110: in test_batch_prediction
+    assert response.json()[0]["status"] == "success"
+E   AssertionError: assert 'error' == 'success'
+E     
+E     - success
+E     + error
+============================== warnings summary ===============================
+api\main.py:32
+  D:\projects\datamodeMLOPS\mlops-auto-retrain\api\main.py:32: DeprecationWarning: 
+          on_event is deprecated, use lifespan event handlers instead.
+  
+          Read more about it in the
+          [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+          
+    @app.on_event("startup")
+
+C:\Users\SG LOVE\AppData\Local\Programs\Python\Python312\Lib\site-packages\fastapi\applications.py:4576
+  C:\Users\SG LOVE\AppData\Local\Programs\Python\Python312\Lib\site-packages\fastapi\applications.py:4576: DeprecationWarning: 
+          on_event is deprecated, use lifespan event handlers instead.
+  
+          Read more about it in the
+          [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+          
+    return self.router.on_event(event_type)
+
+C:\Users\SG LOVE\AppData\Local\Programs\Python\Python312\Lib\site-packages\pydantic\fields.py:1093: 15 warnings
+  C:\Users\SG LOVE\AppData\Local\Programs\Python\Python312\Lib\site-packages\pydantic\fields.py:1093: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.11/migration/
+    warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/test_api.py::test_health_check - AssertionError: assert 'unhealt...
+FAILED tests/test_api.py::test_predict_success - assert 503 == 200
+FAILED tests/test_api.py::test_predict_validation_error - assert 503 == 400
+FAILED tests/test_api.py::test_predict_missing_optional_field - assert 503 ==...
+FAILED tests/test_api.py::test_predict_edge_case_zero_values - assert 503 == 200
+FAILED tests/test_api.py::test_batch_prediction - AssertionError: assert 'err...
+================== 6 failed, 2 passed, 17 warnings in 1.39s ===================

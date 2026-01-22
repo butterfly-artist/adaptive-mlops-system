@@ -1,0 +1,10 @@
+{
+  "mean_shift": -32.99807643312102,
+  "variance_change": -4628.002257314633,
+  "ks_p_value": 2.2536770255427428e-23,
+  "is_drifted": true,
+  "ref_mean": 52.99807643312102,
+  "curr_mean": 20.0,
+  "ref_std": 68.02942199750512,
+  "curr_std": 0.0
+}

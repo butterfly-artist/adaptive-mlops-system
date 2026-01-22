@@ -1,0 +1,10 @@
+artifact_location: file:///D:\projects\datamodeMLOPS\mlops-auto-retrain\mlruns/236769769552933228/models/m-6947808e1afd4e04983ca6d79710f721/artifacts
+creation_timestamp: 1769077538864
+experiment_id: '236769769552933228'
+last_updated_timestamp: 1769077546144
+model_id: m-6947808e1afd4e04983ca6d79710f721
+model_type: null
+name: model
+source_run_id: 82b4e8c8f8e14ee6b6346b5e6154f805
+status: 2
+status_message: null
