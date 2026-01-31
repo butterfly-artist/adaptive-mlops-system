@@ -1,0 +1,93 @@
+[
+  {
+    "timestamp": "2026-01-29T14:11:09.169004",
+    "decision": {
+      "trigger_retraining": true,
+      "reason": "All retraining conditions met: Significant feature drift, prediction drift, sufficient data, and cooldown passed.",
+      "conditions": {
+        "feature_drift": {
+          "score": 0.3125,
+          "threshold": 0.2,
+          "passed": true
+        },
+        "prediction_drift": {
+          "p_value": 0.0,
+          "threshold": 0.05,
+          "passed": true
+        },
+        "sample_count": {
+          "count": 157,
+          "required": 50,
+          "passed": true
+        },
+        "cooldown": {
+          "passed": true,
+          "detail": "No previous retraining history found."
+        }
+      },
+      "timestamp": "2026-01-29T14:10:55.111817",
+      "retraining_status": "success",
+      "promotion_status": "promoted"
+    }
+  },
+  {
+    "timestamp": "2026-01-29T14:11:15.555129",
+    "decision": {
+      "trigger_retraining": false,
+      "reason": "Retraining skipped: Cooldown period not passed",
+      "conditions": {
+        "feature_drift": {
+          "score": 0.3125,
+          "threshold": 0.2,
+          "passed": true
+        },
+        "prediction_drift": {
+          "p_value": 0.0,
+          "threshold": 0.05,
+          "passed": true
+        },
+        "sample_count": {
+          "count": 157,
+          "required": 50,
+          "passed": true
+        },
+        "cooldown": {
+          "passed": false,
+          "detail": "Cooldown active. Last success was 0.0 hours ago (Required: 24h)."
+        }
+      },
+      "timestamp": "2026-01-29T14:11:15.555129",
+      "retraining_status": "skipped"
+    }
+  },
+  {
+    "timestamp": "2026-01-29T14:11:52.638957",
+    "decision": {
+      "trigger_retraining": false,
+      "reason": "Retraining skipped: Cooldown period not passed",
+      "conditions": {
+        "feature_drift": {
+          "score": 0.3125,
+          "threshold": 0.2,
+          "passed": true
+        },
+        "prediction_drift": {
+          "p_value": 0.0,
+          "threshold": 0.05,
+          "passed": true
+        },
+        "sample_count": {
+          "count": 157,
+          "required": 50,
+          "passed": true
+        },
+        "cooldown": {
+          "passed": false,
+          "detail": "Cooldown active. Last success was 0.0 hours ago (Required: 24h)."
+        }
+      },
+      "timestamp": "2026-01-29T14:11:52.636956",
+      "retraining_status": "skipped"
+    }
+  }
+]

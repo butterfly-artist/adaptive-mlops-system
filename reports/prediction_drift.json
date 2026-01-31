@@ -1,10 +1,10 @@
 {
-  "mean_shift": -32.99807643312102,
-  "variance_change": -4628.002257314633,
-  "ks_p_value": 2.2536770255427428e-23,
+  "mean_shift": 211.9923057324841,
+  "variance_change": 111072.05417555122,
+  "ks_p_value": 1.894074661115424e-21,
   "is_drifted": true,
   "ref_mean": 52.99807643312102,
-  "curr_mean": 20.0,
+  "curr_mean": 264.9903821656051,
   "ref_std": 68.02942199750512,
-  "curr_std": 0.0
+  "curr_std": 340.1471099875256
 }
