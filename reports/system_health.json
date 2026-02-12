@@ -1,32 +1,31 @@
 {
-  "timestamp": "2026-01-29T14:11:52.641957",
+  "timestamp": "2026-02-12T15:31:36.863401",
   "system_status": "Drift Detected",
   "model_performance": {
-    "current_rmse": 50.48229862817371,
-    "current_r2": 0.32274487772403615,
-    "last_updated": "2026-01-29T14:11:08.669874"
+    "current_rmse": 75.21887880612745,
+    "current_r2": 0.4191416515790716,
+    "last_updated": "2026-02-12T14:19:22.794247"
   },
   "drift_observability": {
-    "last_drift_check": "2026-01-29T14:11:52.621170",
-    "drifted_features_count": 5,
+    "last_drift_check": "2026-02-12T15:31:36.856873",
+    "drifted_features_count": 4,
     "drifted_features": [
-      "Price_in_thousands",
-      "Engine_size",
-      "Horsepower",
-      "Wheelbase",
-      "Width"
+      "Manufacturer",
+      "Model",
+      "Vehicle_type",
+      "Latest_Launch"
     ],
-    "prediction_drift_detected": true
+    "prediction_drift_detected": false
   },
   "retraining_observability": {
-    "total_retraining_attempts": 3,
-    "successful_retrains": 1,
+    "total_retraining_attempts": 1,
+    "successful_retrains": 0,
     "failed_retrains": 0,
     "rejected_by_gate": 0,
-    "last_trigger_reason": "Retraining skipped: Cooldown period not passed"
+    "last_trigger_reason": "Retraining skipped: Prediction drift not significant"
   },
   "stability_metrics": {
-    "retrain_success_rate": 0.3333333333333333,
+    "retrain_success_rate": 0.0,
     "model_promotion_rate": 1.0
   }
 }

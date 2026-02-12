@@ -1,0 +1,23 @@
+{
+  "numerical_features": [
+    "__year_resale_value",
+    "Price_in_thousands",
+    "Engine_size",
+    "Horsepower",
+    "Wheelbase",
+    "Width",
+    "Length",
+    "Curb_weight",
+    "Fuel_capacity",
+    "Fuel_efficiency",
+    "Power_perf_factor"
+  ],
+  "categorical_features": [
+    "Manufacturer",
+    "Model",
+    "Vehicle_type"
+  ],
+  "date_features": [
+    "Latest_Launch"
+  ]
+}

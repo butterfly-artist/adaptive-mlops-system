@@ -31,6 +31,15 @@ class RetrainingDecisionEngine:
         self.min_samples_required = min_samples_required
         self.cooldown_hours = cooldown_hours
         
+    def _safe_float(self, value: Any, default: float = 0.0) -> float:
+        """Safely convert a value to float, handling strings and None."""
+        try:
+            if value is None:
+                return default
+            return float(value)
+        except (ValueError, TypeError):
+            return default
+
     def _check_cooldown(self, history_path: Path) -> Tuple[bool, str]:
         """Check if enough time has passed since the last successful retraining."""
         if not history_path.exists():
@@ -40,18 +49,31 @@ class RetrainingDecisionEngine:
             with open(history_path, 'r', encoding='utf-8') as f:
                 history = json.load(f)
             
-            if not history:
-                return True, "History is empty."
+            if not history or not isinstance(history, list):
+                return True, "History is empty or invalid."
                 
             # Find last success
-            successes = [h for h in history if h.get("decision", {}).get("retraining_status") == "success"]
+            successes = []
+            for h in history:
+                if not isinstance(h, dict): continue
+                decision = h.get("decision", {})
+                if not isinstance(decision, dict): continue
+                if decision.get("retraining_status") == "success":
+                    successes.append(h)
+
             if not successes:
                 return True, "No successful retraining found in history."
                 
-            last_success_time = datetime.fromisoformat(successes[-1]["timestamp"])
+            last_event = successes[-1]
+            if "timestamp" not in last_event:
+                return True, "Last event missing timestamp."
+
+            last_success_time = datetime.fromisoformat(last_event["timestamp"])
             time_since = datetime.now() - last_success_time
             
-            if time_since < timedelta(hours=self.cooldown_hours):
+            # Use float comparison safely
+            cooldown_seconds = self.cooldown_hours * 3600
+            if time_since.total_seconds() < cooldown_seconds:
                 return False, f"Cooldown active. Last success was {time_since.total_seconds()/3600:.1f} hours ago (Required: {self.cooldown_hours}h)."
             
             return True, f"Cooldown passed. Last success was {time_since.total_seconds()/3600:.1f} hours ago."
@@ -73,15 +95,15 @@ class RetrainingDecisionEngine:
         logger.info("Evaluating retraining decision rules...")
         
         # 1. Feature Drift Score
-        drifted_count = drift_summary.get("drifted_features_count", 0)
-        total_features = drift_summary.get("total_features_checked", 1)
+        drifted_count = self._safe_float(drift_summary.get("drifted_features_count", 0))
+        total_features = self._safe_float(drift_summary.get("total_features_checked", 1), default=1.0)
         feature_drift_score = drifted_count / total_features
         feature_drift_pass = feature_drift_score >= self.feature_drift_threshold
         
         # 2. Prediction Drift Score
         # We use the KS p-value from prediction drift analysis
         # If p-value < threshold, drift is detected
-        p_value = prediction_drift.get("ks_p_value", 1.0)
+        p_value = self._safe_float(prediction_drift.get("ks_p_value"), default=1.0)
         prediction_drift_pass = p_value < self.prediction_drift_threshold
         
         # 3. New Samples Count

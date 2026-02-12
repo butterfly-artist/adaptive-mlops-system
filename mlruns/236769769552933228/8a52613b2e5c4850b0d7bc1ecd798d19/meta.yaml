@@ -1,0 +1,15 @@
+artifact_uri: file:///D:\projects\datamodeMLOPS\mlops-auto-retrain\mlruns/236769769552933228/8a52613b2e5c4850b0d7bc1ecd798d19/artifacts
+end_time: 1770886247362
+entry_point_name: ''
+experiment_id: '236769769552933228'
+lifecycle_stage: active
+run_id: 8a52613b2e5c4850b0d7bc1ecd798d19
+run_name: lasso_v1.0
+run_uuid: 8a52613b2e5c4850b0d7bc1ecd798d19
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1770886247243
+status: 4
+tags: []
+user_id: SG LOVE

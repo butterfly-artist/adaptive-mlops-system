@@ -186,4 +186,9 @@ def run_retraining_pipeline():
     return decision["trigger_retraining"]
 
 if __name__ == "__main__":
-    run_retraining_pipeline()
+    try:
+        run_retraining_pipeline()
+    except Exception:
+        import traceback
+        logger.error(f"FATAL ERROR in pipeline:\n{traceback.format_exc()}")
+        sys.exit(1)

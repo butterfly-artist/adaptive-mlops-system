@@ -56,6 +56,13 @@ def run_deployment_gate(candidate_dir: str, production_dir: str) -> bool:
         return True
 
     # 3. Decision Logic
+    try:
+        candidate_rmse = float(candidate_rmse)
+        production_rmse = float(production_rmse)
+    except (ValueError, TypeError):
+        logger.error(f"Invalid RMSE types: Candidate={type(candidate_rmse)}, Production={type(production_rmse)}")
+        return False
+
     logger.info(f"Candidate RMSE:  {candidate_rmse:.4f}")
     logger.info(f"Production RMSE: {production_rmse:.4f}")
     

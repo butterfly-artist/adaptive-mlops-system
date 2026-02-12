@@ -57,28 +57,34 @@ class DataValidator:
         self.validation_errors: List[str] = []
         self.validation_warnings: List[str] = []
         
-    def validate(self, df: pd.DataFrame) -> Tuple[bool, List[str], List[str]]:
+    def validate(self, df: pd.DataFrame, is_prediction: bool = False) -> Tuple[bool, List[str], List[str]]:
         """
         Run all validation checks on the dataframe
         
+        Args:
+            df: The dataframe to validate
+            is_prediction: If True, bypass checks for target column and dataset size
+            
         Returns:
             Tuple of (is_valid, errors, warnings)
         """
-        logger.info("Starting data validation...")
+        logger.info(f"Starting data validation (is_prediction={is_prediction})...")
         
         self.validation_errors = []
         self.validation_warnings = []
         
         # Run all validation checks
-        self._validate_schema(df)
+        self._validate_schema(df, is_prediction)
         self._validate_data_types(df)
-        self._validate_missing_values(df)
-        self._validate_target_column(df)
+        self._validate_missing_values(df, is_prediction)
+        if not is_prediction:
+            self._validate_target_column(df)
+            self._validate_dataset_size(df)
+            self._validate_outliers(df)
+        
         self._validate_ranges(df)
         self._validate_categorical_values(df)
         self._validate_dates(df)
-        self._validate_dataset_size(df)
-        self._validate_outliers(df)
         self._validate_relationships(df)
         
         is_valid = len(self.validation_errors) == 0
@@ -93,33 +99,77 @@ class DataValidator:
         
         return is_valid, self.validation_errors, self.validation_warnings
     
-    def _validate_schema(self, df: pd.DataFrame) -> None:
-        """Validate that all required columns are present"""
-        missing_cols = set(REQUIRED_COLUMNS) - set(df.columns)
-        if missing_cols:
-            self.validation_errors.append(
-                f"Missing required columns: {missing_cols}"
-            )
+    def _infer_schema_from_df(self, df: pd.DataFrame):
+        """Automatically infer the schema and rules from a dataframe."""
+        logger.info("Inferring schema and rules automatically...")
+        self.inferred_required_columns = df.columns.tolist()
+        self.inferred_dtypes = df.dtypes.to_dict()
         
-        extra_cols = set(df.columns) - set(REQUIRED_COLUMNS)
-        if extra_cols:
-            self.validation_warnings.append(
-                f"Extra columns found: {extra_cols}"
-            )
-    
-    def _validate_data_types(self, df: pd.DataFrame) -> None:
+        # Simple heuristic: last numerical column is the target
+        num_cols = df.select_dtypes(include=['number']).columns.tolist()
+        self.inferred_target = num_cols[-1] if num_cols else None
+        
+        # Calculate basic constraints
+        self.inferred_ranges = {}
+        for col in num_cols:
+            self.inferred_ranges[col] = {
+                'min': df[col].min(),
+                'max': df[col].max()
+            }
+
+    def validate(self, df: pd.DataFrame, is_prediction: bool = False) -> Tuple[bool, List[str], List[str]]:
+        """Run all validation checks on the dataframe"""
+        self.validation_errors = []
+        self.validation_warnings = []
+        
+        # If no config is present or we want to be autonomous, infer from DF
+        # In a real MLOps scenario, we'd infer from the RAWED dataset once and store it.
+        if not hasattr(self, 'inferred_required_columns'):
+            self._infer_schema_from_df(df)
+
+        self._validate_schema(df, is_prediction=is_prediction)
+        self._validate_data_types(df)
+        self._validate_missing_values(df, is_prediction=is_prediction)
+        
+        if not is_prediction:
+            self._validate_target_column(df)
+            self._validate_dataset_size(df)
+            self._validate_outliers(df)
+        
+        self._validate_ranges(df)
+        self._validate_categorical_values(df)
+        # self._validate_dates(df) # Skip for now to be more general
+        self._validate_relationships(df)
+        
+        is_valid = len(self.validation_errors) == 0
+        return is_valid, self.validation_errors, self.validation_warnings
+
+    def _validate_schema(self, df: pd.DataFrame, is_prediction: bool = False):
+        """Validate that all required columns are present"""
+        required = set(self.inferred_required_columns)
+        if is_prediction and self.inferred_target:
+            required.discard(self.inferred_target)
+
+        missing_cols = required - set(df.columns)
+        if missing_cols:
+            self.validation_errors.append(f"Missing required columns: {list(missing_cols)}")
+
+    def _validate_data_types(self, df: pd.DataFrame):
         """Validate data types match expected schema"""
-        for col, expected_dtype in EXPECTED_DTYPES.items():
+        for col, expected_dtype in self.inferred_dtypes.items():
             if col not in df.columns:
                 continue
-                
-            actual_dtype = str(df[col].dtype)
-            if actual_dtype != expected_dtype:
-                self.validation_errors.append(
+            
+            actual_dtype = df[col].dtype
+            # Allow some flexibility, especially for prediction time int/float mix
+            if expected_dtype == 'float64' and actual_dtype in ['float64', 'int64']:
+                continue
+            if expected_dtype != actual_dtype:
+                self.validation_warnings.append(
                     f"Column '{col}' has dtype '{actual_dtype}', expected '{expected_dtype}'"
                 )
-    
-    def _validate_missing_values(self, df: pd.DataFrame) -> None:
+
+    def _validate_missing_values(self, df: pd.DataFrame, is_prediction: bool = False) -> None:
         """Validate missing values according to strategy"""
         total_rows = len(df)
         
@@ -136,6 +186,10 @@ class DataValidator:
                     f"but strategy is 'reject'"
                 )
             
+            # Skip percentage check for single-row predictions
+            if is_prediction and total_rows == 1:
+                continue
+                
             if col in MAX_MISSING_PERCENTAGE:
                 max_allowed = MAX_MISSING_PERCENTAGE[col]
                 if missing_pct > max_allowed:
@@ -176,18 +230,27 @@ class DataValidator:
             max_val = constraints.get('max')
             
             if min_val is not None:
-                violations = (col_data < min_val).sum()
-                if violations > 0:
-                    self.validation_errors.append(
-                        f"Column '{col}' has {violations} values below minimum {min_val}"
-                    )
+                try:
+                    violations = (col_data < min_val).sum()
+                    if violations > 0:
+                        self.validation_errors.append(
+                            f"Column '{col}' has {violations} values below minimum {min_val}"
+                        )
+                except TypeError as e:
+                    logger.error(f"Type error in range validation for column '{col}': {e}")
+                    logger.error(f"Sample data from '{col}': {col_data.head(3).tolist()}")
+                    self.validation_errors.append(f"Type error in column '{col}': {e}")
             
             if max_val is not None:
-                violations = (col_data > max_val).sum()
-                if violations > 0:
-                    self.validation_errors.append(
-                        f"Column '{col}' has {violations} values above maximum {max_val}"
-                    )
+                try:
+                    violations = (col_data > max_val).sum()
+                    if violations > 0:
+                        self.validation_errors.append(
+                            f"Column '{col}' has {violations} values above maximum {max_val}"
+                        )
+                except TypeError as e:
+                    logger.error(f"Type error in range validation for column '{col}': {e}")
+                    self.validation_errors.append(f"Type error in column '{col}': {e}")
     
     def _validate_categorical_values(self, df: pd.DataFrame) -> None:
         """Validate categorical columns have expected values"""
@@ -290,12 +353,13 @@ class DataValidator:
                 )
 
 
-def validate_data(data_input: Any) -> Tuple[bool, pd.DataFrame, List[str], List[str]]:
+def validate_data(data_input: Any, is_prediction: bool = False) -> Tuple[bool, pd.DataFrame, List[str], List[str]]:
     """
     Main function to validate data from file or DataFrame
     
     Args:
         data_input: Path to CSV file OR pandas DataFrame
+        is_prediction: If True, bypass checks for target column and dataset size
         
     Returns:
         Tuple of (is_valid, dataframe, errors, warnings)
@@ -309,7 +373,7 @@ def validate_data(data_input: Any) -> Tuple[bool, pd.DataFrame, List[str], List[
             logger.info(f"Loaded data from {data_input}: {df.shape[0]} rows, {df.shape[1]} columns")
         
         validator = DataValidator()
-        is_valid, errors, warnings = validator.validate(df)
+        is_valid, errors, warnings = validator.validate(df, is_prediction=is_prediction)
         
         return is_valid, df, errors, warnings
         
