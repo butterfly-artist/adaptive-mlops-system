@@ -39,5 +39,6 @@ def load_production_model():
     if not model_path:
         raise FileNotFoundError("No production model found in production_models/")
         
-    print(f"Loading model from: {model_path}")
-    return joblib.load(model_path)
+    abs_path = model_path.absolute()
+    print(f"Loading model from: {abs_path}")
+    return joblib.load(abs_path)

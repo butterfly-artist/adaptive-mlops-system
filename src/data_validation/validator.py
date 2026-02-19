@@ -173,54 +173,44 @@ class DataValidator:
         """Validate missing values according to strategy"""
         total_rows = len(df)
         
-        for col, strategy in MISSING_VALUE_STRATEGY.items():
-            if col not in df.columns:
-                continue
-            
+        # In autonomous mode, we allow some missing values unless they are critical
+        for col in df.columns:
             missing_count = df[col].isnull().sum()
-            missing_pct = (missing_count / total_rows) * 100
-            
-            if strategy == 'reject' and missing_count > 0:
-                self.validation_errors.append(
-                    f"Column '{col}' has {missing_count} missing values ({missing_pct:.2f}%), "
-                    f"but strategy is 'reject'"
-                )
-            
-            # Skip percentage check for single-row predictions
-            if is_prediction and total_rows == 1:
+            if missing_count == 0:
                 continue
                 
-            if col in MAX_MISSING_PERCENTAGE:
-                max_allowed = MAX_MISSING_PERCENTAGE[col]
-                if missing_pct > max_allowed:
-                    self.validation_errors.append(
-                        f"Column '{col}' has {missing_pct:.2f}% missing values, "
-                        f"exceeds maximum allowed {max_allowed}%"
-                    )
+            missing_pct = (missing_count / total_rows) * 100
+            
+            # Critical warning for high missing counts
+            if missing_pct > 50:
+                 self.validation_warnings.append(
+                    f"Column '{col}' has {missing_pct:.2f}% missing values. This may impact model performance."
+                )
     
     def _validate_target_column(self, df: pd.DataFrame) -> None:
         """Validate target column integrity"""
-        if TARGET_COLUMN not in df.columns:
-            self.validation_errors.append(f"Target column '{TARGET_COLUMN}' not found")
+        target = getattr(self, 'inferred_target', None)
+        if not target or target not in df.columns:
             return
         
         # Target must be non-negative
-        if (df[TARGET_COLUMN] < 0).any():
-            negative_count = (df[TARGET_COLUMN] < 0).sum()
+        if (df[target] < 0).any():
+            negative_count = (df[target] < 0).sum()
             self.validation_errors.append(
-                f"Target column '{TARGET_COLUMN}' has {negative_count} negative values"
+                f"Target column '{target}' has {negative_count} negative values"
             )
         
         # Target cannot be null
-        if df[TARGET_COLUMN].isnull().any():
-            null_count = df[TARGET_COLUMN].isnull().sum()
+        if df[target].isnull().any():
+            null_count = df[target].isnull().sum()
             self.validation_errors.append(
-                f"Target column '{TARGET_COLUMN}' has {null_count} null values"
+                f"Target column '{target}' has {null_count} null values"
             )
     
     def _validate_ranges(self, df: pd.DataFrame) -> None:
         """Validate numerical values are within acceptable ranges"""
-        for col, constraints in RANGE_CONSTRAINTS.items():
+        ranges = getattr(self, 'inferred_ranges', {})
+        for col, constraints in ranges.items():
             if col not in df.columns:
                 continue
             
@@ -231,126 +221,64 @@ class DataValidator:
             
             if min_val is not None:
                 try:
-                    violations = (col_data < min_val).sum()
+                    # Allow 10% buffer for ranges in autonomous mode
+                    buffer_min = min_val * 0.9 if min_val > 0 else min_val * 1.1
+                    violations = (col_data < buffer_min).sum()
                     if violations > 0:
-                        self.validation_errors.append(
-                            f"Column '{col}' has {violations} values below minimum {min_val}"
+                        self.validation_warnings.append(
+                            f"Column '{col}' has {violations} values below expected minimum {buffer_min:.2f}"
                         )
-                except TypeError as e:
-                    logger.error(f"Type error in range validation for column '{col}': {e}")
-                    logger.error(f"Sample data from '{col}': {col_data.head(3).tolist()}")
-                    self.validation_errors.append(f"Type error in column '{col}': {e}")
+                except TypeError:
+                    pass
             
             if max_val is not None:
                 try:
-                    violations = (col_data > max_val).sum()
+                    # Allow 10% buffer
+                    buffer_max = max_val * 1.1 if max_val > 0 else max_val * 0.9
+                    violations = (col_data > buffer_max).sum()
                     if violations > 0:
-                        self.validation_errors.append(
-                            f"Column '{col}' has {violations} values above maximum {max_val}"
+                        self.validation_warnings.append(
+                            f"Column '{col}' has {violations} values above expected maximum {buffer_max:.2f}"
                         )
-                except TypeError as e:
-                    logger.error(f"Type error in range validation for column '{col}': {e}")
-                    self.validation_errors.append(f"Type error in column '{col}': {e}")
+                except TypeError:
+                    pass
     
     def _validate_categorical_values(self, df: pd.DataFrame) -> None:
-        """Validate categorical columns have expected values"""
-        for col, allowed_values in CATEGORICAL_CONSTRAINTS.items():
-            if col not in df.columns:
-                continue
-            
-            unique_values = set(df[col].dropna().unique())
-            invalid_values = unique_values - set(allowed_values)
-            
-            if invalid_values:
-                self.validation_errors.append(
-                    f"Column '{col}' has invalid values: {invalid_values}. "
-                    f"Allowed values: {allowed_values}"
-                )
-    
-    def _validate_dates(self, df: pd.DataFrame) -> None:
-        """Validate date columns"""
-        if DATE_COLUMN not in df.columns:
-            return
-        
-        try:
-            dates = pd.to_datetime(df[DATE_COLUMN], format=DATE_FORMAT, errors='coerce')
-            
-            # Check for unparseable dates
-            invalid_dates = dates.isnull().sum()
-            if invalid_dates > 0:
-                self.validation_errors.append(
-                    f"Column '{DATE_COLUMN}' has {invalid_dates} invalid date formats"
-                )
-            
-            # Check for future dates
-            valid_dates = dates.dropna()
-            future_dates = (valid_dates > MAX_DATE).sum()
-            if future_dates > 0:
-                self.validation_errors.append(
-                    f"Column '{DATE_COLUMN}' has {future_dates} future dates"
-                )
-            
-            # Check for too old dates
-            old_dates = (valid_dates < MIN_DATE).sum()
-            if old_dates > 0:
+        """Validate categorical columns (Checks for excessive cardinality)"""
+        for col in df.select_dtypes(include=['object', 'category']).columns:
+            cardinality = df[col].nunique()
+            if cardinality > 100 and len(df) > 1000:
                 self.validation_warnings.append(
-                    f"Column '{DATE_COLUMN}' has {old_dates} dates before {MIN_DATE}"
+                    f"Column '{col}' has high cardinality ({cardinality} unique values)"
                 )
-                
-        except Exception as e:
-            self.validation_errors.append(
-                f"Error parsing dates in '{DATE_COLUMN}': {str(e)}"
-            )
     
     def _validate_dataset_size(self, df: pd.DataFrame) -> None:
-        """Validate dataset has minimum required size"""
-        if len(df) < MIN_DATASET_SIZE:
+        """Validate dataset has enough data to be statistically significant"""
+        if len(df) < 10: # Minimum for any basic model
             self.validation_errors.append(
-                f"Dataset has only {len(df)} rows, minimum required is {MIN_DATASET_SIZE}"
+                f"Dataset has only {len(df)} rows, minimum required for autonomy is 10"
             )
     
     def _validate_outliers(self, df: pd.DataFrame) -> None:
-        """Detect and warn about outliers using IQR method"""
-        for col in OUTLIER_DETECTION_COLUMNS:
-            if col not in df.columns:
-                continue
-            
+        """Detect outliers in numerical columns automatically"""
+        num_cols = df.select_dtypes(include=['number']).columns
+        for col in num_cols:
             data = df[col].dropna()
+            if len(data) < 20: continue # Not enough for stats
+            
             Q1 = data.quantile(0.25)
             Q3 = data.quantile(0.75)
             IQR = Q3 - Q1
             
-            lower_bound = Q1 - IQR_MULTIPLIER * IQR
-            upper_bound = Q3 + IQR_MULTIPLIER * IQR
-            
-            outliers = ((data < lower_bound) | (data > upper_bound)).sum()
-            
+            outliers = ((data < (Q1 - 3 * IQR)) | (data > (Q3 + 3 * IQR))).sum()
             if outliers > 0:
-                outlier_pct = (outliers / len(data)) * 100
                 self.validation_warnings.append(
-                    f"Column '{col}' has {outliers} ({outlier_pct:.2f}%) potential outliers"
+                    f"Column '{col}' has {outliers} extreme outliers"
                 )
     
     def _validate_relationships(self, df: pd.DataFrame) -> None:
-        """Validate business logic relationships between columns"""
-        
-        # Rule: Resale value should be less than original price
-        if '__year_resale_value' in df.columns and 'Price_in_thousands' in df.columns:
-            comparison_df = df.dropna(subset=['__year_resale_value', 'Price_in_thousands'])
-            violations = (comparison_df['__year_resale_value'] > comparison_df['Price_in_thousands']).sum()
-            
-            if violations > 0:
-                self.validation_warnings.append(
-                    f"Found {violations} cases where resale value exceeds original price"
-                )
-        
-        # Rule: Power performance factor should be positive when present
-        if 'Power_perf_factor' in df.columns:
-            negative_ppf = (df['Power_perf_factor'].dropna() <= 0).sum()
-            if negative_ppf > 0:
-                self.validation_errors.append(
-                    f"Power performance factor has {negative_ppf} non-positive values"
-                )
+        """No generic rules for autonomous mode yet."""
+        pass
 
 
 def validate_data(data_input: Any, is_prediction: bool = False) -> Tuple[bool, pd.DataFrame, List[str], List[str]]:

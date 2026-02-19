@@ -320,6 +320,11 @@
             </svg>
             MLOPS ELITE
         </div>
+        <div class="card" style="margin-bottom: 20px; padding: 15px; border-radius: 12px;">
+            <label style="font-size: 0.7rem; opacity: 0.7;">SECURITY ACCESS KEY</label>
+            <input type="password" id="globalApiKey" value="MLOPS_PLATFORM_KEY_2026"
+                style="width: 100%; font-size: 0.7rem; padding: 8px; margin-top: 5px;">
+        </div>
         <nav>
             <div class="nav-item active" onclick="showSection('dashboard', this)">DASHBOARD</div>
             <div class="nav-item" onclick="showSection('predict', this)">PREDICT</div>
@@ -327,7 +332,7 @@
             <div class="nav-item" onclick="showSection('history', this)">HISTORY</div>
             <div class="nav-item" onclick="showSection('upload', this)">DATA UPLOAD</div>
         </nav>
-        <div style="margin-top: auto; font-size: 0.7rem; color: var(--text-dim);">SYSTEM OK • v1.0.0-PROD</div>
+        <div style="margin-top: auto; font-size: 0.7rem; color: var(--text-dim);">SYSTEM OK • v1.1.0-AUTO</div>
     </aside>
 
     <main class="main-container">
@@ -337,13 +342,13 @@
             <div class="grid">
                 <div class="card">
                     <span class="stat-label">Model Status</span>
-                    <span class="stat-value" id="dash_modelVersion">V1.0</span>
+                    <span class="stat-value" id="dash_modelVersion">V1.1-AUTO</span>
                     <div id="dash_modelHealth" class="status-pill status-safe">HEALTHY</div>
                 </div>
                 <div class="card">
                     <span class="stat-label">Production RMSE</span>
                     <span class="stat-value" id="dash_rmse">--.--</span>
-                    <span class="stat-label" style="font-size: 0.7rem;">Last Evaluation</span>
+                    <span class="stat-label" style="font-size: 0.7rem;">Dynamic Metric</span>
                 </div>
                 <div class="card">
                     <span class="stat-label">Drift Severity</span>
@@ -363,39 +368,12 @@
 
         <!-- Predict Section -->
         <section id="predict" class="section">
-            <h2>Make a Prediction</h2>
+            <h2>Autonomous Prediction Report</h2>
             <div class="card">
-                <form id="predictForm">
-                    <div class="form-grid">
-                        <div class="input-group"><label>Manufacturer</label><input type="text" id="Manufacturer"
-                                value="Acura"></div>
-                        <div class="input-group"><label>Model</label><input type="text" id="Model" value="Integra">
-                        </div>
-                        <div class="input-group"><label>Vehicle Type</label><select id="Vehicle_type">
-                                <option value="Passenger">Passenger</option>
-                                <option value="Car">Car</option>
-                            </select></div>
-                        <div class="input-group"><label>Price ($k)</label><input type="number" id="Price_in_thousands"
-                                value="21.5" step="0.1"></div>
-                        <div class="input-group"><label>Engine Size</label><input type="number" id="Engine_size"
-                                value="1.8" step="0.1"></div>
-                        <div class="input-group"><label>Horsepower</label><input type="number" id="Horsepower"
-                                value="140"></div>
-                        <div class="input-group"><label>Width</label><input type="number" id="Width" value="67.3"
-                                step="0.1"></div>
-                        <div class="input-group"><label>Fuel Efficiency</label><input type="number" id="Fuel_efficiency"
-                                value="28.0" step="0.1"></div>
-                        <div class="input-group"><label>Fuel Capacity</label><input type="number" id="Fuel_capacity"
-                                value="13.2" step="0.1"></div>
-                        <div class="input-group"><label>Power Perf Factor</label><input type="number"
-                                id="Power_perf_factor" value="58.28" step="0.01"></div>
-                        <div class="input-group"><label>Wheelbase</label><input type="number" id="Wheelbase"
-                                value="101.2" step="0.1"></div>
-                        <div class="input-group"><label>Length</label><input type="number" id="Length" value="172.4"
-                                step="0.1"></div>
-                        <!-- Hidden but required by logic -->
-                        <input type="hidden" id="Latest_Launch" value="2/2/2012">
-                        <input type="hidden" id="Curb_weight" value="2.639">
+                <div id="schema_loading" style="text-align:center; padding: 20px;">Fetching dynamic schema...</div>
+                <form id="predictForm" style="display:none">
+                    <div class="form-grid" id="dynamicFields">
+                        <!-- Fields generated by JS -->
                     </div>
                     <button type="submit" class="btn" style="width: 100%; margin-top: 30px;">Generate Intelligence
                         Report</button>
@@ -465,7 +443,7 @@
                 Result</span>
             <div id="modalPredictionValue"
                 style="font-size: 4rem; font-weight: 800; color: var(--primary); margin: 20px 0;">--.--</div>
-            <p style="color: var(--text-dim); margin-bottom: 30px;">Thousands of Units Sold</p>
+            <p id="modalTargetLabel" style="color: var(--text-dim); margin-bottom: 30px;">--</p>
             <button class="btn" onclick="document.getElementById('predictModal').style.display='none'">Dismiss</button>
         </div>
     </div>
@@ -476,10 +454,23 @@
 
         async function api(path, method = 'GET', body = null) {
             document.getElementById('globalLoader').style.transform = 'scaleX(0.5)';
+            const apiKey = document.getElementById('globalApiKey').value;
             try {
-                const options = { method, headers: { 'Content-Type': 'application/json' } };
+                const options = {
+                    method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-API-KEY': apiKey
+                    }
+                };
                 if (body) options.body = JSON.stringify(body);
                 const res = await fetch(path, options);
+
+                if (res.status === 403) {
+                    alert("Security Alert: Invalid API Key provided!");
+                    return null;
+                }
+
                 const data = await res.json();
                 document.getElementById('globalLoader').style.transform = 'scaleX(1)';
                 setTimeout(() => document.getElementById('globalLoader').style.transform = 'scaleX(0)', 300);
@@ -488,6 +479,45 @@
                 console.error(e);
                 return null;
             }
+        }
+
+        let currentSchema = null;
+
+        async function loadSchema() {
+            const schema = await api('/schema');
+            if (!schema || schema.error) return;
+            currentSchema = schema;
+
+            const container = document.getElementById('dynamicFields');
+            container.innerHTML = '';
+
+            schema.required_columns.forEach(col => {
+                if (col === schema.target_column) return;
+
+                const dtype = schema.dtypes[col];
+                const isNum = dtype.includes('int') || dtype.includes('float');
+                const range = schema.ranges[col];
+
+                const group = document.createElement('div');
+                group.className = 'input-group';
+
+                let inputHtml = '';
+                if (isNum) {
+                    const step = dtype.includes('float') ? '0.01' : '1';
+                    inputHtml = `<input type="number" id="field_${col}" step="${step}" placeholder="${range ? 'Range: ' + range.min + ' to ' + range.max : ''}" required>`;
+                } else {
+                    inputHtml = `<input type="text" id="field_${col}" required>`;
+                }
+
+                group.innerHTML = `<label>${col.replace(/_/g, ' ')}</label>${inputHtml}`;
+                container.appendChild(group);
+            });
+
+            // Update modal subtitle dynamically
+            document.getElementById('modalTargetLabel').innerText = schema.target_column.replace(/_/g, ' ');
+
+            document.getElementById('schema_loading').style.display = 'none';
+            document.getElementById('predictForm').style.display = 'block';
         }
 
         function showSection(id, el) {
@@ -499,18 +529,19 @@
             if (id === 'dashboard') loadDashboard();
             if (id === 'monitoring') loadMonitoring();
             if (id === 'history') loadHistory();
+            if (id === 'predict') loadSchema();
         }
 
         async function loadDashboard() {
             const health = await api('/observability/health');
             if (!health || health.status === 'error') return;
 
-            document.getElementById('dash_rmse').innerText = health.performance_metrics.rmse.toFixed(3);
-            document.getElementById('dash_driftScore').innerText = health.drift_metrics.max_feature_drift.toFixed(3);
-            document.getElementById('dash_modelVersion').innerText = health.model_info.version;
+            document.getElementById('dash_rmse').innerText = typeof health.model_performance.current_rmse === 'number' ? health.model_performance.current_rmse.toFixed(3) : health.model_performance.current_rmse;
+            document.getElementById('dash_driftScore').innerText = health.drift_observability.drifted_features_count;
+            document.getElementById('dash_modelVersion').innerText = "V1.1-AUTO";
 
             const dStatus = document.getElementById('dash_driftStatus');
-            if (health.drift_metrics.max_feature_drift > 0.2) {
+            if (health.system_status !== 'Healthy') {
                 dStatus.innerText = 'DRIFT DETECTED';
                 dStatus.className = 'status-pill status-danger';
             } else {
@@ -552,12 +583,13 @@
             tbody.innerHTML = '';
 
             history.reverse().forEach(ev => {
+                const decision = ev.decision || {};
                 const row = `<tr>
                     <td>${ev.timestamp.split('T')[0]}</td>
-                    <td>${ev.reason || 'Manual Trigger'}</td>
-                    <td>${ev.retrained ? 'Retrained' : 'Skipped'}</td>
+                    <td>${decision.reason || 'Manual Trigger'}</td>
+                    <td>${decision.retraining_status === 'success' ? 'Retrained' : 'Skipped'}</td>
                     <td>${ev.metrics ? ev.metrics.rmse.toFixed(3) : '--'}</td>
-                    <td><span class="status-pill ${ev.promoted ? 'status-safe' : 'status-danger'}">${ev.promoted ? 'PROMOTED' : 'REJECTED'}</span></td>
+                    <td><span class="status-pill ${decision.promotion_status === 'promoted' ? 'status-safe' : 'status-danger'}">${decision.promotion_status || 'N/A'}</span></td>
                 </tr>`;
                 tbody.innerHTML += row;
             });
@@ -565,29 +597,31 @@
 
         document.getElementById('predictForm').onsubmit = async (e) => {
             e.preventDefault();
-            const body = {
-                Manufacturer: document.getElementById('Manufacturer').value,
-                Model: document.getElementById('Model').value,
-                Vehicle_type: document.getElementById('Vehicle_type').value,
-                Price_in_thousands: parseFloat(document.getElementById('Price_in_thousands').value),
-                Engine_size: parseFloat(document.getElementById('Engine_size').value),
-                Horsepower: parseInt(document.getElementById('Horsepower').value),
-                Wheelbase: parseFloat(document.getElementById('Wheelbase').value),
-                Width: parseFloat(document.getElementById('Width').value),
-                Length: parseFloat(document.getElementById('Length').value),
-                Curb_weight: parseFloat(document.getElementById('Curb_weight').value),
-                Fuel_capacity: parseFloat(document.getElementById('Fuel_capacity').value),
-                Fuel_efficiency: parseFloat(document.getElementById('Fuel_efficiency').value),
-                Latest_Launch: document.getElementById('Latest_Launch').value,
-                Power_perf_factor: parseFloat(document.getElementById('Power_perf_factor').value)
-            };
+            const body = {};
+            currentSchema.required_columns.forEach(col => {
+                if (col === currentSchema.target_column) return;
+                const el = document.getElementById(`field_${col}`);
+                const dtype = currentSchema.dtypes[col];
+                if (dtype.includes('int') || dtype.includes('float')) {
+                    const val = parseFloat(el.value);
+                    const range = currentSchema.ranges[col];
+                    if (range && (val < range.min * 0.1 || val > range.max * 10)) {
+                        if (!confirm(`Warning: ${col} value (${val}) is significantly outside the training range (${range.min} - ${range.max}). The prediction might be unreliable. Continue?`)) {
+                            return;
+                        }
+                    }
+                    body[col] = val;
+                } else {
+                    body[col] = el.value;
+                }
+            });
 
             const res = await api('/predict', 'POST', body);
             if (res && res.prediction !== undefined) {
                 document.getElementById('modalPredictionValue').innerText = res.prediction.toFixed(2);
                 document.getElementById('predictModal').style.display = 'flex';
             } else {
-                alert('Prediction failed. Check console for details.');
+                alert('Prediction failed. Ensure you have a valid API key and model is loaded.');
             }
         };
 

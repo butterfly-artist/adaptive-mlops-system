@@ -1,0 +1,85 @@
+
+==================================================
+Prediction error: columns are missing: {'Length', 'Curb_weight', 'Horsepower', 'Sales_in_thousands', 'Width', '__year_resale_value', 'Vehicle_type', 'Manufacturer', 'Engine_size', 'Fuel_capacity', 'Latest_Launch', 'Price_in_thousands', 'Model', 'Wheelbase', 'Fuel_efficiency'}
+Traceback (most recent call last):
+  File "D:\projects\datamodeMLOPS\mlops-auto-retrain\api\main.py", line 180, in predict
+    prediction = model.predict(validated_df)[0]
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\projects\datamodeMLOPS\mlops-auto-retrain\venv\Lib\site-packages\sklearn\pipeline.py", line 602, in predict
+    Xt = transform.transform(Xt)
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\projects\datamodeMLOPS\mlops-auto-retrain\venv\Lib\site-packages\sklearn\utils\_set_output.py", line 273, in wrapped
+    data_to_wrap = f(self, X, *args, **kwargs)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\projects\datamodeMLOPS\mlops-auto-retrain\venv\Lib\site-packages\sklearn\compose\_column_transformer.py", line 1003, in transform
+    raise ValueError(f"columns are missing: {diff}")
+ValueError: columns are missing: {'Length', 'Curb_weight', 'Horsepower', 'Sales_in_thousands', 'Width', '__year_resale_value', 'Vehicle_type', 'Manufacturer', 'Engine_size', 'Fuel_capacity', 'Latest_Launch', 'Price_in_thousands', 'Model', 'Wheelbase', 'Fuel_efficiency'}
+
+
+==================================================
+Prediction error: columns are missing: {'Length', 'Curb_weight', 'Horsepower', 'Sales_in_thousands', 'Width', '__year_resale_value', 'Vehicle_type', 'Manufacturer', 'Engine_size', 'Fuel_capacity', 'Latest_Launch', 'Price_in_thousands', 'Model', 'Wheelbase', 'Fuel_efficiency'}
+Traceback (most recent call last):
+  File "D:\projects\datamodeMLOPS\mlops-auto-retrain\api\main.py", line 180, in predict
+    prediction = model.predict(validated_df)[0]
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\projects\datamodeMLOPS\mlops-auto-retrain\venv\Lib\site-packages\sklearn\pipeline.py", line 602, in predict
+    Xt = transform.transform(Xt)
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\projects\datamodeMLOPS\mlops-auto-retrain\venv\Lib\site-packages\sklearn\utils\_set_output.py", line 273, in wrapped
+    data_to_wrap = f(self, X, *args, **kwargs)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\projects\datamodeMLOPS\mlops-auto-retrain\venv\Lib\site-packages\sklearn\compose\_column_transformer.py", line 1003, in transform
+    raise ValueError(f"columns are missing: {diff}")
+ValueError: columns are missing: {'Length', 'Curb_weight', 'Horsepower', 'Sales_in_thousands', 'Width', '__year_resale_value', 'Vehicle_type', 'Manufacturer', 'Engine_size', 'Fuel_capacity', 'Latest_Launch', 'Price_in_thousands', 'Model', 'Wheelbase', 'Fuel_efficiency'}
+
+
+==================================================
+Prediction error: columns are missing: {'Length', 'Curb_weight', 'Horsepower', 'Sales_in_thousands', 'Width', '__year_resale_value', 'Vehicle_type', 'Manufacturer', 'Engine_size', 'Fuel_capacity', 'Latest_Launch', 'Price_in_thousands', 'Model', 'Wheelbase', 'Fuel_efficiency'}
+Traceback (most recent call last):
+  File "D:\projects\datamodeMLOPS\mlops-auto-retrain\api\main.py", line 180, in predict
+    prediction = model.predict(validated_df)[0]
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\projects\datamodeMLOPS\mlops-auto-retrain\venv\Lib\site-packages\sklearn\pipeline.py", line 602, in predict
+    Xt = transform.transform(Xt)
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\projects\datamodeMLOPS\mlops-auto-retrain\venv\Lib\site-packages\sklearn\utils\_set_output.py", line 273, in wrapped
+    data_to_wrap = f(self, X, *args, **kwargs)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\projects\datamodeMLOPS\mlops-auto-retrain\venv\Lib\site-packages\sklearn\compose\_column_transformer.py", line 1003, in transform
+    raise ValueError(f"columns are missing: {diff}")
+ValueError: columns are missing: {'Length', 'Curb_weight', 'Horsepower', 'Sales_in_thousands', 'Width', '__year_resale_value', 'Vehicle_type', 'Manufacturer', 'Engine_size', 'Fuel_capacity', 'Latest_Launch', 'Price_in_thousands', 'Model', 'Wheelbase', 'Fuel_efficiency'}
+
+
+==================================================
+Prediction error: columns are missing: {'Length', 'Curb_weight', 'Horsepower', 'Sales_in_thousands', 'Width', '__year_resale_value', 'Vehicle_type', 'Manufacturer', 'Engine_size', 'Fuel_capacity', 'Latest_Launch', 'Price_in_thousands', 'Model', 'Wheelbase', 'Fuel_efficiency'}
+Traceback (most recent call last):
+  File "D:\projects\datamodeMLOPS\mlops-auto-retrain\api\main.py", line 180, in predict
+    prediction = model.predict(validated_df)[0]
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\projects\datamodeMLOPS\mlops-auto-retrain\venv\Lib\site-packages\sklearn\pipeline.py", line 602, in predict
+    Xt = transform.transform(Xt)
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\projects\datamodeMLOPS\mlops-auto-retrain\venv\Lib\site-packages\sklearn\utils\_set_output.py", line 273, in wrapped
+    data_to_wrap = f(self, X, *args, **kwargs)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\projects\datamodeMLOPS\mlops-auto-retrain\venv\Lib\site-packages\sklearn\compose\_column_transformer.py", line 1003, in transform
+    raise ValueError(f"columns are missing: {diff}")
+ValueError: columns are missing: {'Length', 'Curb_weight', 'Horsepower', 'Sales_in_thousands', 'Width', '__year_resale_value', 'Vehicle_type', 'Manufacturer', 'Engine_size', 'Fuel_capacity', 'Latest_Launch', 'Price_in_thousands', 'Model', 'Wheelbase', 'Fuel_efficiency'}
+
+
+==================================================
+Prediction error: columns are missing: {'Length', 'Curb_weight', 'Horsepower', 'Sales_in_thousands', 'Width', '__year_resale_value', 'Vehicle_type', 'Manufacturer', 'Engine_size', 'Fuel_capacity', 'Latest_Launch', 'Price_in_thousands', 'Model', 'Wheelbase', 'Fuel_efficiency'}
+Traceback (most recent call last):
+  File "D:\projects\datamodeMLOPS\mlops-auto-retrain\api\main.py", line 180, in predict
+    prediction = model.predict(validated_df)[0]
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\projects\datamodeMLOPS\mlops-auto-retrain\venv\Lib\site-packages\sklearn\pipeline.py", line 602, in predict
+    Xt = transform.transform(Xt)
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\projects\datamodeMLOPS\mlops-auto-retrain\venv\Lib\site-packages\sklearn\utils\_set_output.py", line 273, in wrapped
+    data_to_wrap = f(self, X, *args, **kwargs)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\projects\datamodeMLOPS\mlops-auto-retrain\venv\Lib\site-packages\sklearn\compose\_column_transformer.py", line 1003, in transform
+    raise ValueError(f"columns are missing: {diff}")
+ValueError: columns are missing: {'Length', 'Curb_weight', 'Horsepower', 'Sales_in_thousands', 'Width', '__year_resale_value', 'Vehicle_type', 'Manufacturer', 'Engine_size', 'Fuel_capacity', 'Latest_Launch', 'Price_in_thousands', 'Model', 'Wheelbase', 'Fuel_efficiency'}
+

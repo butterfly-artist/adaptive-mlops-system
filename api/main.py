@@ -3,11 +3,11 @@ Car Sales Prediction API
 FastAPI implementation with integrated data validation
 """
 
-from fastapi import FastAPI, HTTPException, BackgroundTasks
+from fastapi import FastAPI, HTTPException, BackgroundTasks, Header, Depends
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Union
 import pandas as pd
 import numpy as np
 import sys
@@ -29,8 +29,14 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Global model variable
+# Global variables
 model = None
+API_KEY = "MLOPS_PLATFORM_KEY_2026"
+
+async def verify_api_key(x_api_key: str = Header(...)):
+    if x_api_key != API_KEY:
+        raise HTTPException(status_code=403, detail="Invalid API Key")
+    return x_api_key
 
 # Mount static files
 app.mount("/static", StaticFiles(directory="api/static"), name="static")
@@ -46,39 +52,15 @@ async def startup_event():
     global model
     try:
         model = load_production_model()
-        print("[OK] Production model loaded successfully")
+        print(f"[OK] Production model loaded successfully")
     except Exception as e:
         print(f"[ERROR] Failed to load model: {e}")
-        # In production, you might want to exit or retry
-        pass
 
 # ============================================================
 # SCHEMAS
 # ============================================================
 
-class CarData(BaseModel):
-    """Input schema for a single car prediction"""
-    Manufacturer: str = Field(..., example="Acura")
-    Model: str = Field(..., example="Integra")
-    Vehicle_type: str = Field(..., example="Passenger")
-    Price_in_thousands: float = Field(..., example=21.5)
-    Engine_size: float = Field(..., example=1.8)
-    Horsepower: int = Field(..., example=140)
-    Wheelbase: float = Field(..., example=101.2)
-    Width: float = Field(..., example=67.3)
-    Length: float = Field(..., example=172.4)
-    Curb_weight: float = Field(..., example=2.639)
-    Fuel_capacity: float = Field(..., example=13.2)
-    Fuel_efficiency: float = Field(..., example=28.0)
-    Latest_Launch: str = Field(..., example="2/2/2012")
-    Power_perf_factor: float = Field(..., example=58.28)
-    # Optional fields that might be missing in raw data
-    # Pydantic v2 uses alias for fields starting with __
-    year_resale_value: Optional[float] = Field(None, alias="__year_resale_value", example=16.36)
-
-    model_config = {
-        "populate_by_name": True
-    }
+# Strict schemas removed in favor of dynamic Dict[str, Any]
 
 class PredictionResponse(BaseModel):
     """Output schema for prediction"""
@@ -108,8 +90,38 @@ async def health():
         return {"status": "unhealthy", "reason": "Model not loaded"}
     return {"status": "healthy"}
 
+@app.get("/schema")
+async def get_schema():
+    """Returns the current expected schema inferred from the training data"""
+    from data_validation.validator import DataValidator
+    validator = DataValidator()
+    # Read the first row of training data to infer
+    data_path = Path(__file__).parent.parent / 'data' / 'raw' / 'car_sales.csv'
+    if data_path.exists():
+        df = pd.read_csv(data_path, nrows=5)
+        is_valid, err, warn = validator.validate(df)
+        # Convert everything to standard Python types for JSON serializability
+        ranges_serializable = {}
+        for col, r in validator.inferred_ranges.items():
+            ranges_serializable[col] = {
+                "min": float(r['min']) if pd.notnull(r['min']) else None,
+                "max": float(r['max']) if pd.notnull(r['max']) else None
+            }
+            
+        return {
+            "required_columns": validator.inferred_required_columns,
+            "target_column": validator.inferred_target,
+            "dtypes": {k: str(v) for k, v in validator.inferred_dtypes.items()},
+            "ranges": ranges_serializable
+        }
+    return {"error": "Training data not found to infer schema"}
+
 @app.post("/predict", response_model=PredictionResponse)
-async def predict(data: CarData, background_tasks: BackgroundTasks):
+async def predict(
+    data: Dict[str, Any], 
+    background_tasks: BackgroundTasks,
+    api_key: str = Depends(verify_api_key)
+):
     """
     Predict sales for a car.
     Includes integrated data validation.
@@ -119,16 +131,33 @@ async def predict(data: CarData, background_tasks: BackgroundTasks):
     if model is None:
         raise HTTPException(status_code=503, detail="Model not available")
     
-    # 1. Convert input to DataFrame
-    # Use model_dump(by_alias=True) to get the original column names (like __year_resale_value)
-    input_dict = data.model_dump(by_alias=True)
-    
-    # Clean optional fields: convert None or "None" strings to NaN
-    for key, value in input_dict.items():
-        if value is None or value == "None" or value == "NaN":
-            input_dict[key] = np.nan
+    # 1. Convert input to DataFrame and align with schema
+    from data_validation.validator import DataValidator
+    validator = DataValidator()
+    # Read training data to get full schema for alignment
+    data_path = Path(__file__).parent.parent / 'data' / 'raw' / 'car_sales.csv'
+    if data_path.exists():
+        ref_df = pd.read_csv(data_path, nrows=1)
+        validator.validate(ref_df) # This populates the inferred fields
+        expected_cols = validator.inferred_required_columns
+    else:
+        expected_cols = list(data.keys())
+
+    input_dict = data
+    for col in expected_cols:
+        if col not in input_dict:
+            input_dict[col] = np.nan
+        # Clean existing values
+        val = input_dict[col]
+        if val is None or val == "" or val == "None" or val == "NaN":
+            input_dict[col] = np.nan
             
+    # Ensure correct order for the model
     df = pd.DataFrame([input_dict])
+    if data_path.exists():
+        # Only keep columns the model expects (dropping target if present)
+        cols_to_use = [c for c in expected_cols if c != validator.inferred_target]
+        df = df[cols_to_use]
     
     # 2. Validate Data
     # We pass is_prediction=True to bypass checks for target column and dataset size
@@ -170,6 +199,11 @@ async def predict(data: CarData, background_tasks: BackgroundTasks):
         )
         
     except Exception as e:
+        import traceback
+        error_msg = f"Prediction error: {str(e)}\n{traceback.format_exc()}"
+        with open('logs/api_debug.log', 'a') as f:
+            f.write("\n" + "="*50 + "\n")
+            f.write(error_msg + "\n")
         raise HTTPException(status_code=500, detail=f"Prediction error: {str(e)}")
 
 @app.get("/observability/health")
@@ -203,26 +237,27 @@ async def get_retraining_history():
         return json.load(f)
 
 @app.post("/data/upload")
-async def upload_csv(background_tasks: BackgroundTasks, file: List[CarData]):
-    """
-    Experimental: Batch upload cars to the prediction log.
-    In a real app, this would handle a CSV file. 
-    For now, we accept a list of CarData objects (validated by Pydantic).
-    """
-    for item in file:
-        input_dict = item.model_dump(by_alias=True)
-        # We don't predict here, just log them as new 'potential' samples
-        background_tasks.add_task(log_prediction, input_data=input_dict, prediction=None, model_version="manual_upload")
-    return {"status": "success", "message": f"Queued {len(file)} records for logging"}
+async def upload_data(
+    file_data: List[Dict[str, Any]], 
+    background_tasks: BackgroundTasks,
+    api_key: str = Depends(verify_api_key)
+):
+    """Batch upload to the prediction log."""
+    for item in file_data:
+        background_tasks.add_task(log_prediction, input_data=item, prediction=None, model_version="manual_upload")
+    return {"status": "success", "message": f"Queued {len(file_data)} records"}
 
 @app.post("/predict_batch")
-async def predict_batch(data: List[CarData]):
+async def predict_batch(
+    data: List[Dict[str, Any]],
+    background_tasks: BackgroundTasks,
+    api_key: str = Depends(verify_api_key)
+):
     """Batch prediction endpoint"""
-    # Simplified batch implementation
     results = []
     for item in data:
         try:
-            res = await predict(item, background_tasks)
+            res = await predict(item, background_tasks, api_key)
             results.append(res)
         except HTTPException as e:
             results.append({"status": "error", "detail": e.detail})

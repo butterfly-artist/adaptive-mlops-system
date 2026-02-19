@@ -1,0 +1,14 @@
+artifact_uri: file:D:/projects/datamodeMLOPS/mlops-auto-retrain/mlruns/743721205151594205/8d849045dae14e569dabcba863867a46/artifacts
+end_time: 1770891944174
+entry_point_name: ''
+experiment_id: '743721205151594205'
+lifecycle_stage: active
+run_id: 8d849045dae14e569dabcba863867a46
+run_name: Retrain_car_sales.csv
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1770891934032
+status: 3
+tags: []
+user_id: SG LOVE
